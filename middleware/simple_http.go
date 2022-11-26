@@ -21,6 +21,9 @@ var users = []User{
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
+	// u, p, ok := r.BasicAuth()
+	// log.Println("auth:", u, p, ok)
+
 	if r.Method == "GET" {
 		//* covert string to byte
 		// w.Write([]byte(`{"name": "fatcat", "method": "GET"}`))
@@ -72,6 +75,24 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 // 	}
 // }
 
+func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, p, ok := r.BasicAuth()
+		if !ok {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`can't parse the basic auth`))
+			return
+		}
+		if u != "admin" || p != "1234" {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`Username/Password incorrect`))
+			return
+		}
+		fmt.Println("auth passed.")
+		next(w, r)
+	}
+}
+
 type Logger struct {
 	Handler http.Handler
 }
@@ -86,7 +107,7 @@ func main() {
 	mux := http.NewServeMux()
 	// http.HandleFunc("/users", logMiddleware(usersHandler))
 	// http.HandleFunc("/health", logMiddleware(healthHandler))
-	mux.HandleFunc("/users", usersHandler)
+	mux.HandleFunc("/users", AuthMiddleware(usersHandler))
 	mux.HandleFunc("/health", healthHandler)
 
 	logMux := Logger{Handler: mux}
