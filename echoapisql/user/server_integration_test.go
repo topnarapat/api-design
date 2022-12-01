@@ -1,6 +1,6 @@
 //go:build integration
 
-package main
+package user
 
 import (
 	"bytes"
@@ -93,7 +93,7 @@ func TestDeleteUserByID(t *testing.T) {
 	err := res.Decode(&latest)
 
 	assert.Nil(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	assert.Empty(t, latest.ID)
 	assert.Empty(t, latest.Name)
 	assert.Empty(t, latest.Age)
@@ -137,7 +137,7 @@ func (r *Response) Decode(v interface{}) error {
 }
 
 func request(method, url string, body io.Reader) *Response {
-	godotenv.Load("../.env")
+	godotenv.Load("../../.env")
 	req, _ := http.NewRequest(method, url, body)
 	req.Header.Add("Authorization", os.Getenv("AUTH_TOKEN"))
 	req.Header.Add("Content-Type", "application/json")
